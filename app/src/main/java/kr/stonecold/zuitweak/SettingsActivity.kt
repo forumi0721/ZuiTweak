@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.core.content.ContextCompat.getString
+import androidx.activity.OnBackPressedCallback
 import com.topjohnwu.superuser.Shell
 import kr.stonecold.zuitweak.common.*
 import java.util.Locale
@@ -45,6 +46,17 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         initializeLanguage(this)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val now = System.currentTimeMillis()
+                if (backPressedTime + 2000 > now) {
+                    finish()
+                } else {
+                    Toast.makeText(this@SettingsActivity, getString(R.string.back_press_exit), Toast.LENGTH_SHORT).show()
+                }
+                backPressedTime = now
+            }
+        })
 
         SharedPrefsUtil.init()
         if (SharedPrefsUtil.isInitialized) {
@@ -63,17 +75,7 @@ class SettingsActivity : ComponentActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    @Suppress("DEPRECATION")
-    override fun onBackPressed() {
-        if (backPressedTime + 2000 > System.currentTimeMillis()) {
-            super.onBackPressed()
-            finish()
-        } else {
-            Toast.makeText(this, getString(R.string.back_press_exit), Toast.LENGTH_SHORT).show()
-        }
-        backPressedTime = System.currentTimeMillis()
-    }
+
 }
 
 private fun reloadSettings(context: Context) {
@@ -435,7 +437,7 @@ fun initializeLanguage(context: Context) {
     }
 
     if (defaultLocale != language) {
-        val locale = Locale(language)
+        val locale = Locale.forLanguageTag(language.replace('_', '-'))
         Locale.setDefault(locale)
         val config = context.resources.configuration
         config.setLocale(locale)
@@ -452,7 +454,7 @@ fun initializeLanguage(context: Context) {
 }
 
 fun updateLanguage(context: Context, language: String) {
-    val locale = Locale(language)
+    val locale = Locale.forLanguageTag(language.replace('_', '-'))
     Locale.setDefault(locale)
     val config = context.resources.configuration
     config.setLocale(locale)

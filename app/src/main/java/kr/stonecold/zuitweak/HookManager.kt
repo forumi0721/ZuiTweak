@@ -32,11 +32,7 @@ object HookManager {
         //registerHook(HookEnableTurnScreenOn()) ///테스트 필요
 
         //ROW
-        if (Constants.deviceVersion == "16.0") {
-            registerHook(HookEnableMultipleSpace16())
-        } else {
-            registerHook(HookEnableMultipleSpace())
-        }
+        registerHook(HookEnableMultipleSpace())
         registerHook(HookEnableBatteryOverheatNotify())
         registerHook(HookEnableOneVisionSmartSplit())
         //registerHook(HookEnableTaskbarShowRecentApps()) //동작안함
@@ -48,7 +44,6 @@ object HookManager {
         registerHook(HookFixDocumentsUICrash())
         registerHook(HookDisableStudyLauncher())
         registerHook(HookRemovePrcInfo())
-        registerHook(HookFixBatteryIconTestMode())
         registerHook(HookEnableOneVisionSmartRotation())
 
         //DEVICE

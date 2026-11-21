@@ -26,15 +26,8 @@ class HookEnableTaskbarShowRecentApps : HookBaseHandleLoadPackage() {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "com.android.settings" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookTaskbarDisplaySettingsControllerIsShowRecentSetting(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookTaskbarDisplaySettingsControllerIsShowRecentSetting15(lpparam)
-                    }
-                }
+                hookTaskbarDisplaySettingsControllerIsShowRecentSetting(lpparam)
+                hookTaskbarRecentAppsControllerIsShowRecentSetting(lpparam)
             }
         }
     }
@@ -48,8 +41,8 @@ class HookEnableTaskbarShowRecentApps : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookTaskbarDisplaySettingsControllerIsShowRecentSetting15(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.system.TaskbarDisplaySettingsController"
+    private fun hookTaskbarRecentAppsControllerIsShowRecentSetting(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val className = "com.lenovo.settings.system.taskbar.TaskbarRecentAppsController"
         val methodName = "isShowRecentSetting"
         val parameterTypes = arrayOf<Any>(Context::class.java)
         val callback = XC_MethodReplacement.returnConstant(true)

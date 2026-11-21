@@ -22,7 +22,7 @@ class HookRemoveShutdownMessage : HookBaseHandleInitPackageResources() {
     override val hookTargetPackageOptional: Array<String> = emptyArray()
 
     override fun isEnabledCustomCheck(): Boolean {
-        return Constants.deviceVersion == "16.0"
+        return true
     }
 
     override fun handleInitPackageResources(resparam: XC_InitPackageResources.InitPackageResourcesParam) {

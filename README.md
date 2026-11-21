@@ -41,6 +41,10 @@
 - ** TB371FC **
   1. **키보드 단축키 변경:** PRC 기반 롬에서 fn+E, fn+S, fn+P가 정상 동작하도록 변경합니다.
 
+## 빌드
+
+로컬 debug APK는 `./build.sh debug`, 서명된 release APK는 `./build.sh release`로 빌드합니다. Release 서명 정보는 로컬 `~/.bin/KeyStore/`에서 읽습니다. GitHub Actions는 별도 workflow에서 빌드합니다.
+
 ## 소스 코드
 소스 코드는 GitHub에서 확인할 수 있습니다: [ZuiTweak 소스 코드](https://github.com/forumi0721/ZuiTweak)
 

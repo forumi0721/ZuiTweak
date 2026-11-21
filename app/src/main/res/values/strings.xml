@@ -21,7 +21,6 @@
     <string name="device_model">Device Model:</string>
     <string name="unsupported_device">Unsupported Device</string>
     <string name="region">Region:</string>
-    <string name="unknown">Unknown</string>
     <string name="rooting_status">Rooting Status:</string>
     <string name="rooted">Rooted</string>
     <string name="not_rooted">Not Rooted</string>

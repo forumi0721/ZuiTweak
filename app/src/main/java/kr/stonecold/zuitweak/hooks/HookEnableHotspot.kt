@@ -49,15 +49,7 @@ class HookEnableHotspot : HookBaseHandleLoadPackage() {
                 hookTopLevelTetherPreferenceControllerGetAvailabilityStatus(lpparam)
                 hookWifiEnterpriseRestrictionUtilsIsWifiTetheringAllowed(lpparam)
                 hookWifiTetherPreferenceControllerIsAvailable(lpparam)
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookLenovoUtilsIsSupportTether(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookUtilsIsSupportTether(lpparam)
-                    }
-                }
+                hookLenovoUtilsIsSupportTether(lpparam)
             }
         }
     }
@@ -91,15 +83,6 @@ class HookEnableHotspot : HookBaseHandleLoadPackage() {
 
     private fun hookLenovoUtilsIsSupportTether(lpparam: XC_LoadPackage.LoadPackageParam) {
         val className = "com.lenovo.common.utils.LenovoUtils"
-        val methodName = "isSupportTether"
-        val parameterTypes = arrayOf<Any>(Context::class.java)
-        val callback = XC_MethodReplacement.returnConstant(true)
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookUtilsIsSupportTether(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.Utils"
         val methodName = "isSupportTether"
         val parameterTypes = arrayOf<Any>(Context::class.java)
         val callback = XC_MethodReplacement.returnConstant(true)

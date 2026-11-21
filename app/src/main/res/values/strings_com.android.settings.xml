@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!-- These names intentionally mirror Android Settings resources and are resolved dynamically by Xposed. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources,PluralsCandidate">
     <string name="com_android_settings_APN_NAME_CMMMS" translatable="false">CMMMS</string>
     <string name="com_android_settings_APN_NAME_CMNET" translatable="false">CMNET</string>
     <string name="com_android_settings_APN_NAME_CMWAP" translatable="false">CMWAP</string>

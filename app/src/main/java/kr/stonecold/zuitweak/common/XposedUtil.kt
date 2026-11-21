@@ -86,7 +86,7 @@ object XposedUtil {
             when (param) {
                 is Class<*> -> {
                     if (param.isArray) {
-                        param.componentType.name + "[]"
+                        (param.componentType?.name ?: param.name) + "[]"
                     } else {
                         param.name
                     }

@@ -9,7 +9,6 @@ import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
-import android.os.Build
 import android.service.notification.StatusBarNotification
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
@@ -17,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.annotation.RequiresApi
 import com.android.internal.util.ContrastColorUtil
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
@@ -56,19 +54,9 @@ class HookChangeNotificationIcon : HookBaseHandleLoadPackage() {
                 hookDarkIconDispatcherImplConstructor(lpparam)
                 hookStatusBarIconViewSetStaticDrawableColor(lpparam)
                 hookNotificationIconAreaControllerGenerateIconLayoutParams(lpparam)
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookZuiCoreImplClearStatusBarIcon(lpparam)
-                        hookNotificationShelfUpdateResources(lpparam)
-                        hookNotificationIconContainerInitResources(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookCentralSurfacesImplClearStatusBarIcon(lpparam)
-                        hookNotificationShelfInitDimens(lpparam)
-                        hookNotificationIconContainerInitDimens(lpparam)
-                    }
-                }
+                hookZuiCoreImplClearStatusBarIcon(lpparam)
+                hookNotificationShelfUpdateResources(lpparam)
+                hookNotificationIconContainerInitResources(lpparam)
                 hookNotificationHeaderViewWrapperOnContentUpdated(lpparam)
                 hookNotificationInfoBindHeader(lpparam)
                 hookNotificationIconAreaControllerOnDarkChanged(lpparam)
@@ -220,21 +208,11 @@ class HookChangeNotificationIcon : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookCentralSurfacesImplClearStatusBarIcon(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.systemui.statusbar.phone.CentralSurfacesImpl"
-        val methodName = "clearStatusBarIcon"
-        val parameterTypes = emptyArray<Any>()
-        val callback = XC_MethodReplacement.returnConstant(null)
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
     private fun hookNotificationHeaderViewWrapperOnContentUpdated(lpparam: XC_LoadPackage.LoadPackageParam) {
         val className = "com.android.systemui.statusbar.notification.row.wrapper.NotificationHeaderViewWrapper"
         val methodName = "onContentUpdated"
         val parameterTypes = arrayOf<Any>("com.android.systemui.statusbar.notification.row.ExpandableNotificationRow")
         val callback = object : XC_MethodHook() {
-            @RequiresApi(Build.VERSION_CODES.S)
             override fun afterHookedMethod(param: MethodHookParam) {
                 try {
                     val row = param.args[0]
@@ -299,49 +277,9 @@ class HookChangeNotificationIcon : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookNotificationShelfInitDimens(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.systemui.statusbar.NotificationShelf"
-        val methodName = "initDimens"
-        val parameterTypes = emptyArray<Any>()
-        val callback = object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                try {
-                    val mShelfIcons = XposedHelpers.getObjectField(param.thisObject, "mShelfIcons")
-                    XposedHelpers.callMethod(mShelfIcons, "setInNotificationIconShelf", true)
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
     private fun hookNotificationIconContainerInitResources(lpparam: XC_LoadPackage.LoadPackageParam) {
         val className = "com.android.systemui.statusbar.phone.NotificationIconContainer"
         val methodName = "initResources"
-        val parameterTypes = emptyArray<Any>()
-        val callback = object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                try {
-                    val context = XposedHelpers.getObjectField(param.thisObject, "mContext") as Context
-                    val themedContext: Context = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_DayNight)
-                    themedContext.obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary)).use { attrs ->
-                        val color = attrs.getColorStateList(0)!!.defaultColor
-                        XposedHelpers.setIntField(param.thisObject, "mThemedTextColorPrimary", color)
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookNotificationIconContainerInitDimens(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.systemui.statusbar.phone.NotificationIconContainer"
-        val methodName = "initDimens"
         val parameterTypes = emptyArray<Any>()
         val callback = object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
@@ -435,7 +373,6 @@ class HookChangeNotificationIcon : HookBaseHandleLoadPackage() {
         return (ctx!!.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun getSystemAccentColor(): Int {
         return getSystemUiContext()!!.getColor(android.R.color.system_accent1_500)
     }

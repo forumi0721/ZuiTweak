@@ -40,17 +40,8 @@ class HookDisableTaskbar : HookBaseHandleLoadPackage() {
             }
 
             "com.android.systemui" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookUtilitiesIsLargeScreen(lpparam)
-                        hookXSystemUtilIsDevicePad(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookUtilitiesIsTablet(lpparam)
-                        hookXSystemUtilIsPad(lpparam)
-                    }
-                }
+                hookUtilitiesIsLargeScreen(lpparam)
+                hookXSystemUtilIsDevicePad(lpparam)
                 hookNavigationBarInflaterViewOnLikelyDefaultLayoutChange(lpparam)
             }
         }
@@ -88,6 +79,8 @@ class HookDisableTaskbar : HookBaseHandleLoadPackage() {
                 try {
                     val activity = param.thisObject as Activity
                     val window = activity.window
+                    // The hooked Settings window still needs its legacy transparent bar color.
+                    @Suppress("DEPRECATION")
                     window.navigationBarColor = 0x00000000
                     @Suppress("DEPRECATION")
                     window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
@@ -123,52 +116,9 @@ class HookDisableTaskbar : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookUtilitiesIsTablet(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.systemui.shared.recents.utilities.Utilities"
-        val methodName = "isTablet"
-        val parameterTypes = arrayOf<Any>(Context::class.java)
-        val callback = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                try {
-                    val stack = Thread.currentThread().stackTrace
-                    for (line in stack) {
-                        if (line.className.contains("NavigationBarController")) {
-                            param.result = false
-                            return
-                        }
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
     private fun hookXSystemUtilIsDevicePad(lpparam: XC_LoadPackage.LoadPackageParam) {
         val className = "com.android.systemui.util.XSystemUtil"
         val methodName = "isDevicePad"
-        val parameterTypes = emptyArray<Any>()
-        val callback = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                try {
-                    val hookedValue = isPad.get()
-                    if (hookedValue != null) {
-                        param.result = hookedValue == true
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookXSystemUtilIsPad(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.systemui.util.XSystemUtil"
-        val methodName = "isPad"
         val parameterTypes = emptyArray<Any>()
         val callback = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {

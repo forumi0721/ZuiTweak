@@ -1,5 +1,6 @@
 package kr.stonecold.zuitweak.hooks
 
+import android.content.Context
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.callbacks.XC_InitPackageResources
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -49,26 +50,19 @@ class HookAllowDisableDolbyAtmosForBuiltinSpeakers : HookBaseHandleLoadPackage()
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "com.android.settings" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookDolbyAtmosFragmentIsHeadsetConnected(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookDolbyAtmosPreferenceFragmentGetheadsetStatus(lpparam)
-                    }
-                }
+                hookDolbyAtmosFragmentIsHeadsetConnected(lpparam)
+                hookDolbyAtmosUtilsIsHeadsetConnected(lpparam)
             }
 
             "com.android.systemui" -> {
                 hookQDolbyAtmosTileIsHeadSetConnect(lpparam)
+                hookQDolbyAtmosTileIsHeadSetConnect2(lpparam)
                 hookQDolbyAtmosDetailViewIsHeadSetConnect(lpparam)
             }
         }
     }
 
     private fun hookDolbyAtmosFragmentIsHeadsetConnected(lpparam: XC_LoadPackage.LoadPackageParam) {
-        //16.0용
         val className = "com.lenovo.settings.sound.dolby.DolbyAtmosFragment"
         val methodName = "isHeadsetConnected"
         val parameterTypes = emptyArray<Any>()
@@ -77,12 +71,11 @@ class HookAllowDisableDolbyAtmosForBuiltinSpeakers : HookBaseHandleLoadPackage()
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookDolbyAtmosPreferenceFragmentGetheadsetStatus(lpparam: XC_LoadPackage.LoadPackageParam) {
-        //15.0용
-        val className = "com.android.settings.dolby.DolbyAtmosPreferenceFragment"
-        val methodName = "getheadsetStatus"
-        val parameterTypes = emptyArray<Any>()
-        val callback = XC_MethodReplacement.returnConstant(1)
+    private fun hookDolbyAtmosUtilsIsHeadsetConnected(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val className = "com.lenovo.settings.sound.dolby.DolbyAtmosUtils"
+        val methodName = "isHeadsetConnected"
+        val parameterTypes = arrayOf<Any>(Context::class.java)
+        val callback = XC_MethodReplacement.returnConstant(true)
 
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
@@ -90,6 +83,15 @@ class HookAllowDisableDolbyAtmosForBuiltinSpeakers : HookBaseHandleLoadPackage()
     private fun hookQDolbyAtmosTileIsHeadSetConnect(lpparam: XC_LoadPackage.LoadPackageParam) {
         val className = "com.android.systemui.qs.tiles.QDolbyAtmosTile"
         val methodName = "isHeadSetConnect"
+        val parameterTypes = emptyArray<Any>()
+        val callback = XC_MethodReplacement.returnConstant(true)
+
+        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
+    }
+
+    private fun hookQDolbyAtmosTileIsHeadSetConnect2(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val className = "com.android.systemui.qs.tiles.QDolbyAtmosTile"
+        val methodName = "isHeadSetConnect\$2"
         val parameterTypes = emptyArray<Any>()
         val callback = XC_MethodReplacement.returnConstant(true)
 

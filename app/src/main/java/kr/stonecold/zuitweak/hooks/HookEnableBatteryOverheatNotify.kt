@@ -25,15 +25,8 @@ class HookEnableBatteryOverheatNotify : HookBaseHandleLoadPackage() {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "com.android.settings" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookZuiBatteryOverheatPreferenceControllergetAvailabilityStatus(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookZuiBatteryOverheatPreferenceControllerGetAvailabilityStatus15(lpparam)
-                    }
-                }
+                hookZuiBatteryOverheatPreferenceControllergetAvailabilityStatus(lpparam)
+                hookZuiBatteryOverheatPreferenceController17getAvailabilityStatus(lpparam)
             }
         }
     }
@@ -47,8 +40,8 @@ class HookEnableBatteryOverheatNotify : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookZuiBatteryOverheatPreferenceControllerGetAvailabilityStatus15(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.fuelgauge.ZuiBatteryOverheatPreferenceController"
+    private fun hookZuiBatteryOverheatPreferenceController17getAvailabilityStatus(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val className = "com.lenovo.settings.battery.ZuiBatteryOverheatPreferenceController"
         val methodName = "getAvailabilityStatus"
         val parameterTypes = emptyArray<Any>()
         val callback = XC_MethodReplacement.returnConstant(0)

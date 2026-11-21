@@ -29,27 +29,10 @@ class HookChangePermissionController : HookBaseHandleLoadPackage() {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "com.android.permissioncontroller" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookZuiUtilsIsCTSandGTS(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookZuiUtilsIsCTSandGTS15(lpparam)
-                    }
-                }
+                hookZuiUtilsIsCTSandGTS(lpparam)
                 hookGrantPermissionsActivityOnCreate(lpparam)
             }
         }
-    }
-
-    private fun hookZuiUtilsIsCTSandGTS15(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.permissioncontroller.extra.ZuiUtils"
-        val methodName = "isCTSandGTS"
-        val parameterTypes = arrayOf<Any>(String::class.java)
-        val callback = XC_MethodReplacement.returnConstant(true)
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
     private fun hookZuiUtilsIsCTSandGTS(lpparam: XC_LoadPackage.LoadPackageParam) {

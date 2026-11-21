@@ -4,32 +4,15 @@ plugins {
 
 android {
     namespace = "kr.stonecold.hidden_api"
-    compileSdk = 34
-
+    compileSdk = 37
+    compileSdkMinor = 1
     defaultConfig {
-        minSdk = 33
-    }
-    signingConfigs {
-        create("release") {
-            storeFile = File(projectDir, "release-keystore.jks")
-            storePassword = System.getenv("storePassword")
-            keyAlias = System.getenv("keyAlias")
-            keyPassword = System.getenv("keyPassword")
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-            signingConfig = signingConfigs.getByName("release")
-        }
+        minSdk = 34
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        // Refine 4.4.0's annotation processor supports Java 11 source; the app module remains Java 17.
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 

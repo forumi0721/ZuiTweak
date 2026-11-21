@@ -1,6 +1,7 @@
 package kr.stonecold.zuitweak.common
 
 import android.content.Context
+import androidx.core.content.edit
 import kr.stonecold.zuitweak.ZuiTweakApplication
 
 @Suppress("unused")
@@ -11,7 +12,7 @@ object LanguageUtil {
         val context = ZuiTweakApplication.appContext
         val languagePreferences = context.getSharedPreferences(Constants.LANGAUGE_PREFS_NAME, Context.MODE_PRIVATE)
 
-        languagePreferences.edit().putString(PREF_LANGUAGE_KEY, language).apply()
+        languagePreferences.edit { putString(PREF_LANGUAGE_KEY, language) }
     }
 
     fun getLanguage(): String? {

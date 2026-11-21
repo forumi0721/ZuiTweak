@@ -26,19 +26,10 @@ class HookEnableHiddenDisplaySettings : HookBaseHandleLoadPackage() {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "com.android.settings" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookAutoColorPreferenceControllerGetAvailabilityStatus(lpparam)
-                        hookGameEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
-                        hookVideoColorEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
-                        hookVideoQualityEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookUtilsIsFeatureEnabled(lpparam)
-                        hookSettingsPreferenceFragmentRemovePreference(lpparam)
-                    }
-                }
+                hookAutoColorPreferenceControllerGetAvailabilityStatus(lpparam)
+                hookGameEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
+                hookVideoColorEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
+                hookVideoQualityEnhancePreferenceControllerGetAvailabilityStatus(lpparam)
             }
         }
     }
@@ -115,51 +106,4 @@ class HookEnableHiddenDisplaySettings : HookBaseHandleLoadPackage() {
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }
 
-    private fun hookUtilsIsFeatureEnabled(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.Utils"
-        val methodName = "isFeatureEnabled"
-        val parameterTypes = arrayOf<Any>(String::class.java, Context::class.java)
-        val callback = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                try {
-                    val featureName = param.args[0] as String
-                    if (featureName == "config_zuimiravision_enabled") {
-                        param.result = true
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookSettingsPreferenceFragmentRemovePreference(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val preferenceNamesToCheck = setOf(
-            "gaming_hdr_enhancement",
-            "screensaver",
-            "video_color_enhance",
-            "video_quality_enhance",
-            "display_enhancement",
-        )
-
-        val className = "com.android.settings.SettingsPreferenceFragment"
-        val methodName = "removePreference"
-        val parameterTypes = arrayOf<Any>(String::class.java)
-        val callback = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                try {
-                    val preferenceName = param.args[0] as String
-                    if (preferenceName in preferenceNamesToCheck) {
-                        param.result = false
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
 }

@@ -30,22 +30,14 @@ class HookRemovePrcInfo : HookBaseHandleLoadPackage() {
         when (lpparam.packageName) {
             "com.android.settings" -> {
                 hookAboutDeviceFragmentUpdateRowPreference(lpparam)
-                when (Constants.deviceVersion) {
-                    "15.0" -> {
-                        hookAboutDeviceFragmentUpdateShenqiService(lpparam)
-                    }
-
-                    "16.0" -> {
-                        hookAboutDeviceFragmentUpdateLenovoService(lpparam)
-                    }
-                }
+                hookAboutDeviceFragmentUpdateLenovoService(lpparam)
                 hookAboutDeviceFragmentCheckIntentTblenovoCenter(lpparam)
             }
         }
     }
 
     private fun hookAboutDeviceFragmentUpdateRowPreference(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.deviceinfo.aboutphone.AboutDeviceFragment"
+        val className = "com.lenovo.settings.deviceinfo.aboutphone.AboutDeviceFragment"
         val methodName = "updateRowPreference"
         val parameterTypes = emptyArray<Any>()
         val callback = object : XC_MethodReplacement() {
@@ -54,26 +46,6 @@ class HookRemovePrcInfo : HookBaseHandleLoadPackage() {
                     XposedHelpers.callMethod(param.thisObject, "removePreference", "legal_container")
                     XposedHelpers.callMethod(param.thisObject, "removePreference", "regulatory_information")
                     XposedHelpers.callMethod(param.thisObject, "removePreference", "key_shenqi_serve_line")
-                    if (Constants.deviceVersion == "15.0") {
-                        XposedHelpers.callMethod(param.thisObject, "removePreference", "key_shenqi_serve")
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookAboutDeviceFragmentUpdateShenqiService(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.deviceinfo.aboutphone.AboutDeviceFragment"
-        val methodName = "updateShenqiService"
-        val parameterTypes = emptyArray<Any>()
-        val callback = object : XC_MethodReplacement() {
-            override fun replaceHookedMethod(param: MethodHookParam) {
-                try {
-                    XposedHelpers.callMethod(param.thisObject, "removePreference", "key_shenqi_serve")
                 } catch (e: Throwable) {
                     XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
                 }
@@ -84,7 +56,7 @@ class HookRemovePrcInfo : HookBaseHandleLoadPackage() {
     }
 
     private fun hookAboutDeviceFragmentUpdateLenovoService(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.deviceinfo.aboutphone.AboutDeviceFragment"
+        val className = "com.lenovo.settings.deviceinfo.aboutphone.AboutDeviceFragment"
         val methodName = "updateLenovoService"
         val parameterTypes = emptyArray<Any>()
         val callback = object : XC_MethodReplacement() {
@@ -101,7 +73,7 @@ class HookRemovePrcInfo : HookBaseHandleLoadPackage() {
     }
 
     private fun hookAboutDeviceFragmentCheckIntentTblenovoCenter(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.android.settings.deviceinfo.aboutphone.AboutDeviceFragment"
+        val className = "com.lenovo.settings.deviceinfo.aboutphone.AboutDeviceFragment"
         val methodName = "checkIntentTblenovoCenter"
         val parameterTypes = emptyArray<Any>()
         val callback = object : XC_MethodReplacement() {

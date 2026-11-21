@@ -39,15 +39,7 @@ class HookDisableLauncherOnlineSearch : HookBaseHandleLoadPackage() {
                 hookSearchDownloadHelperGetGameAppList(lpparam)
                 hookInternetGlobalSearchIsInternetSearchEnabled(lpparam)
                 hookGlobalSearchUtilsGetDatabaseType(lpparam)
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookDownloadSpanCheckFileAndDownLoadDao(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookDownloadSpanCheckFileAndDownLoadDao15(lpparam)
-                    }
-                }
+                hookDownloadSpanCheckFileAndDownLoadDao(lpparam)
                 hookUtilitiesIsOverlayEnabled(lpparam)
             }
         }
@@ -149,16 +141,6 @@ class HookDisableLauncherOnlineSearch : HookBaseHandleLoadPackage() {
         val methodName = "getDatabaseType"
         val parameterTypes = emptyArray<Any>()
         val callback = XC_MethodReplacement.returnConstant("global_empty.db")
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookDownloadSpanCheckFileAndDownLoadDao15(lpparam: XC_LoadPackage.LoadPackageParam) {
-        //15.0용
-        val className = "${lpparam.packageName}.DownloadSpan"
-        val methodName = "checkFileAndDownLoadDao"
-        val parameterTypes = arrayOf<Any>(String::class.java)
-        val callback = XC_MethodReplacement.returnConstant(null)
 
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }

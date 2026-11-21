@@ -1,8 +1,8 @@
 package kr.stonecold.zuitweak.hooks
 
 import android.content.Context
+import androidx.core.net.toUri
 import android.content.Intent
-import android.net.Uri
 import android.view.KeyEvent
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
@@ -34,16 +34,7 @@ class HookChangeKeyboardHotkeys : HookBaseHandleLoadPackage() {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
             "android" -> {
-                when (Constants.deviceVersion) {
-                    "16.0" -> {
-                        hookKeyboardZuiKeyInputPolicyInterceptKeyBeforeDispatchingBefore(lpparam)
-                    }
-
-                    "15.0" -> {
-                        hookKeyboardZuiKeyInputPolicyInterceptKeyBeforeDispatchingBefore15(lpparam)
-                        hookKeyInputPolicyBaseIsLearningModeEnabled(lpparam)
-                    }
-                }
+                hookKeyboardZuiKeyInputPolicyInterceptKeyBeforeDispatchingBefore(lpparam)
             }
         }
     }
@@ -73,7 +64,7 @@ class HookChangeKeyboardHotkeys : HookBaseHandleLoadPackage() {
                                 val context = XposedHelpers.getObjectField(param.thisObject, "mContext") as Context
                                 val intent = Intent().apply {
                                     action = Intent.ACTION_VIEW
-                                    data = Uri.parse("content://com.android.externalstorage.documents/root/primary")
+                                    data = "content://com.android.externalstorage.documents/root/primary".toUri()
                                     setClassName("com.android.documentsui", "com.android.documentsui.files.FilesActivity")
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                 }
@@ -113,92 +104,6 @@ class HookChangeKeyboardHotkeys : HookBaseHandleLoadPackage() {
                 }
             }
         }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookKeyboardZuiKeyInputPolicyInterceptKeyBeforeDispatchingBefore15(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.zui.server.input.keyboard.key.policy.zui.KeyboardZuiKeyInputPolicy"
-        val methodName = "interceptKeyBeforeDispatchingBefore"
-        val parameterTypes = arrayOf<Any>(KeyEvent::class.java, Int::class.java)
-        val callback = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                try {
-                    val keyEvent = param.args[0] as KeyEvent
-                    val keyCode = keyEvent.keyCode
-                    val repeatCount = keyEvent.repeatCount
-                    val z = keyEvent.action == 0
-
-                    if (keyCode != 33 && keyCode != 47) {
-                        return
-                    }
-
-                    val mIsLanguageSwitchKeyPressed = XposedHelpers.getBooleanField(param.thisObject, "mIsLanguageSwitchKeyPressed")
-
-                    when (keyCode) {
-                        33 -> {
-                            val mOOBECompleted = XposedHelpers.getBooleanField(param.thisObject, "mOOBECompleted")
-                            if (mOOBECompleted && z && repeatCount == 0 && (mIsLanguageSwitchKeyPressed || keyEvent.isMetaPressed)) {
-                                val mHandler = XposedHelpers.getObjectField(param.thisObject, "mHandler")
-                                XposedHelpers.callMethod(mHandler, "post", Runnable {
-                                    runnableKeyEvent(param.thisObject, keyEvent)
-                                })
-
-                                val context = XposedHelpers.getObjectField(param.thisObject, "mContext") as Context
-                                val intent = Intent().apply {
-                                    action = Intent.ACTION_VIEW
-                                    data = Uri.parse("content://com.android.externalstorage.documents/root/primary")
-                                    setClassName("com.android.documentsui", "com.android.documentsui.files.FilesActivity")
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                }
-
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Throwable) {
-                                    XposedUtil.xposedException(tag, "Failed to start activity! package name : com.android.documentsui")
-                                }
-
-                                param.result = true
-                            }
-                        }
-
-                        47 -> {
-                            if (z && repeatCount == 0 && (mIsLanguageSwitchKeyPressed || keyEvent.isMetaPressed)) {
-                                val mHandler = XposedHelpers.getObjectField(param.thisObject, "mHandler")
-                                XposedHelpers.callMethod(mHandler, "post", Runnable {
-                                    runnableKeyEvent(param.thisObject, keyEvent)
-                                })
-
-                                val context = XposedHelpers.getObjectField(param.thisObject, "mContext") as Context
-                                val intent = Intent().apply {
-                                    action = Intent.ACTION_ASSIST
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                }
-
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Throwable) {
-                                    XposedUtil.xposedException(tag, "Failed to start activity! package name : ASSISTANT")
-                                }
-
-                                param.result = true
-                            }
-                        }
-                    }
-                } catch (e: Throwable) {
-                    XposedUtil.handleHookException(tag, e, className, methodName, *parameterTypes)
-                }
-            }
-        }
-
-        XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
-    }
-
-    private fun hookKeyInputPolicyBaseIsLearningModeEnabled(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val className = "com.zui.server.input.keyboard.key.policy.base.KeyInputPolicyBase"
-        val methodName = "isLearningModeEnabled"
-        val parameterTypes = emptyArray<Any>()
-        val callback = XC_MethodReplacement.returnConstant(false)
 
         XposedUtil.executeHook(tag, lpparam, className, methodName, *parameterTypes, callback)
     }

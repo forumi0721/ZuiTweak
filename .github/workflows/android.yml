@@ -1,0 +1,142 @@
+name: Android CI and Release
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'docs/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-debug:
+    if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '27'
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Build debug APK
+        run: ./gradlew --no-daemon :app:assembleDebug :app:lintDebug
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  build-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '27'
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Validate release tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Expected a semantic version tag such as v1.2.3, got: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          echo "app_version=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> "$GITHUB_OUTPUT"
+      - name: Decode release signing bundle
+        env:
+          ANDROID_SIGNING_BUNDLE_BASE64: ${{ secrets.ANDROID_SIGNING_BUNDLE_BASE64 }}
+        shell: bash
+        run: |
+          if [[ -z "$ANDROID_SIGNING_BUNDLE_BASE64" ]]; then
+            echo "Configure ANDROID_SIGNING_BUNDLE_BASE64 with the Base64 encoded ZIP containing release-keystore.jks and release-keystore.jks.pw." >&2
+            exit 1
+          fi
+          printf '%s' "$ANDROID_SIGNING_BUNDLE_BASE64" | base64 --decode > signing-bundle.zip
+          unzip -q signing-bundle.zip -d signing
+          test -s signing/release-keystore.jks
+          test -s signing/release-keystore.jks.pw
+          cp signing/release-keystore.jks app/release-keystore.jks
+          read_password_entry() {
+            local label="$1" exclude="${2:-}"
+            awk -F: -v label="$label" -v exclude="$exclude" '
+              tolower($1) ~ label && (exclude == "" || tolower($1) !~ exclude) {
+                value = substr($0, index($0, ":") + 1)
+                sub(/^[[:space:]]+/, "", value)
+                sub(/[[:space:]]+$/, "", value)
+                print value
+                exit
+              }
+            ' signing/release-keystore.jks.pw
+          }
+          KEY_STORE_PASSWORD="$(read_password_entry 'store.*pass|pass.*store')"
+          KEY_PASSWORD="$(read_password_entry 'key.*pass|pass.*key' 'store')"
+          KEY_ALIAS="$(read_password_entry alias)"
+          if [[ -z "$KEY_STORE_PASSWORD" || -z "$KEY_PASSWORD" || -z "$KEY_ALIAS" ]]; then
+            echo "signing/release-keystore.jks.pw must contain labeled Store password, Key password, and Key alias lines." >&2
+            exit 1
+          fi
+          {
+            echo "KEY_STORE_PASSWORD=$KEY_STORE_PASSWORD"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+          } >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
+        run: ./gradlew --no-daemon :app:assembleRelease -PappVersion="$APP_VERSION"
+      - name: Prepare release asset
+        env:
+          APP_NAME: ${{ github.event.repository.name }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/${APP_NAME}-${RELEASE_TAG}.apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-apk
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-apk
+          path: dist
+      - uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ github.token }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*.apk
+          fail_on_unmatched_files: true
