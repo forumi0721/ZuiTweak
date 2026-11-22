@@ -43,7 +43,8 @@
 
 ## 요구 사항 및 설치
 
-- Lenovo ZUI 기반의 호환 기기와 Xposed 환경이 필요합니다.
+- Android 14 (API 34) 이상, Lenovo ZUI 기반의 호환 기기와 Xposed 환경이 필요합니다.
+- Gradle 실행에는 JDK 27이 필요합니다.
 - APK를 설치한 뒤 Xposed에서 모듈을 활성화하고 기기를 재시작합니다.
 - 런처에서 ZuiTweak을 열어 제공되는 설정을 조정합니다.
 

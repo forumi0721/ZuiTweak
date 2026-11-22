@@ -1,0 +1,3 @@
+# Preserve legacy Xposed entry points and hook classes loaded by the framework.
+-keep class de.robv.android.xposed.** { *; }
+-keep class kr.stonecold.** { *; }
