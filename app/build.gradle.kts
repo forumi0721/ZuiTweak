@@ -13,7 +13,9 @@ val computedVersionCode = appVersionParts[0] * 1_000_000 + appVersionParts[1] * 
 android {
     namespace = "kr.stonecold.zuitweak"
     compileSdk {
-        version = release(37)
+        version = release(37) {
+            minorApiLevel = 1
+        }
     }
     defaultConfig {
         applicationId = "kr.stonecold.zuitweak"
@@ -51,8 +53,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
