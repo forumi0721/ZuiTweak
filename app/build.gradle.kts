@@ -73,6 +73,16 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            if (requested.group == "org.jetbrains.kotlin" && requested.name == "compose-group-mapping") {
+                useVersion("2.4.21")
+            }
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -95,5 +105,4 @@ dependencies {
     compileOnly(project(":hidden-api"))
 
     compileOnly(libs.xposed.api)
-    implementation(libs.libsu.core)
 }

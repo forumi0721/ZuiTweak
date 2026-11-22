@@ -3,14 +3,7 @@
     <string name="xposeddescription">An Xposed module that applies various tweaks to Lenovo Zui-based ROMs.</string>
     <string name="xposedminversion">93</string>
     <string name="back_press_exit">Press back again to exit.</string>
-    <string name="module_not_loaded">Module is not loaded.</string>
-    <string name="reboot_required_android">A reboot is required if any settings related to Android packages have been changed.</string>
-    <string name="no_changes_detected">No changes detected.</string>
-    <string name="no_running_processes">No running processes detected.</string>
-    <string name="failed_reload_settings">Failed to reload settings.</string>
-    <string name="settings_reloaded">Settings reloaded successfully.</string>
     <string name="settings_view">Settings View</string>
-    <string name="reload">Reload</string>
     <string name="language">Language</string>
     <string name="korean">Korean (KO)</string>
     <string name="english">English (EN)</string>
@@ -21,9 +14,6 @@
     <string name="device_model">Device Model:</string>
     <string name="unsupported_device">Unsupported Device</string>
     <string name="region">Region:</string>
-    <string name="rooting_status">Rooting Status:</string>
-    <string name="rooted">Rooted</string>
-    <string name="not_rooted">Not Rooted</string>
     <string name="module_status">Module Status:</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
@@ -89,8 +79,6 @@
     <string name="hook_enable_turn_screen_on_desc">Enables the option to allow apps to turn on the screen.</string>
     <string name="hook_enable_zui_camera_shutter_option_title">Enable Camera Silent Mode Option</string>
     <string name="hook_enable_zui_camera_shutter_option_desc">Enables the silent mode option in the camera app settings.</string>
-    <string name="hook_fix_battery_icon_test_mode_title">Fix Battery Icon Disappearance</string>
-    <string name="hook_fix_battery_icon_test_mode_desc">Fixes the issue where the battery icon disappears when test_mode is enabled.</string>
     <string name="hook_fix_documents_ui_crash_title">Fix DocumentsUI Crash</string>
     <string name="hook_fix_documents_ui_crash_desc">Fixes the crash issue that occurs when dragging with a mouse in DocumentsUI.</string>
     <string name="hook_disable_keyboard_hotkey_menu_title">Disable Keyboard Shortcut Hotkey</string>

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import com.topjohnwu.superuser.Shell
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
@@ -15,10 +14,6 @@ object Util {
 
     fun getModel(): String {
         return Build.MODEL
-    }
-
-    fun isDeviceRooted(): Boolean {
-        return Shell.cmd("su").exec().isSuccess
     }
 
     @SuppressLint("PrivateApi")

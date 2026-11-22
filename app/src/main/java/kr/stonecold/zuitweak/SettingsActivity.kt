@@ -33,11 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.core.content.ContextCompat.getString
 import androidx.activity.OnBackPressedCallback
-import com.topjohnwu.superuser.Shell
 import kr.stonecold.zuitweak.common.*
 import java.util.Locale
-
-private lateinit var prefsSnapshot: Map<String, *>
 
 class SettingsActivity : ComponentActivity() {
     private var backPressedTime: Long = 0
@@ -58,10 +55,7 @@ class SettingsActivity : ComponentActivity() {
             }
         })
 
-        SharedPrefsUtil.init()
-        if (SharedPrefsUtil.isInitialized) {
-            prefsSnapshot = SharedPrefsUtil.getAllOptions()
-        }
+        SharedPrefsUtil.init(this)
 
         setContent {
             ZuiTweakTheme {
@@ -78,77 +72,25 @@ class SettingsActivity : ComponentActivity() {
 
 }
 
-private fun reloadSettings(context: Context) {
-    val packagesToReload = mutableListOf<String>()
-    if (!SharedPrefsUtil.isInitialized || !::prefsSnapshot.isInitialized) {
-        Toast.makeText(context, getString(context, R.string.module_not_loaded), Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    for (hook in HookManager.getAllHooks()) {
-        val oldState = prefsSnapshot.getOrDefault(hook.javaClass.simpleName, hook.menuItem.defaultSelected)
-        val newState = SharedPrefsUtil.getOptionValue(hook.javaClass.simpleName, hook.menuItem.defaultSelected)
-        if (oldState != newState) {
-            packagesToReload.addAll(hook.hookTargetPackage)
-        }
-    }
-
-    if (packagesToReload.contains("android")) {
-        Toast.makeText(context, getString(context, R.string.reboot_required_android), Toast.LENGTH_SHORT).show()
-        return
-    }
-    prefsSnapshot = SharedPrefsUtil.getAllOptions()
-
-    if (packagesToReload.isEmpty()) {
-        Toast.makeText(context, getString(context, R.string.no_changes_detected), Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    val commands = mutableListOf<String>()
-
-    packagesToReload.distinct()
-        .filter { it != "android" }
-        .forEach { pkg ->
-            val result = Shell.cmd("pidof $pkg").exec()
-            if (result.isSuccess && result.out.isNotEmpty()) {
-                commands.add("killall $pkg")
-            }
-        }
-
-    if (commands.isEmpty()) {
-        Toast.makeText(context, getString(context, R.string.no_running_processes), Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    try {
-        val result = Shell.cmd(*commands.toTypedArray()).exec()
-        if (!result.isSuccess) {
-            Toast.makeText(context, getString(context, R.string.failed_reload_settings), Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, getString(context, R.string.settings_reloaded), Toast.LENGTH_SHORT).show()
-        }
-    } catch (e: Exception) {
-        Toast.makeText(context, "${getString(context, R.string.failed_reload_settings)}: ${e.message}", Toast.LENGTH_SHORT).show()
-    }
-}
-
 @Composable
 fun AppContent(modifier: Modifier = Modifier, activity: Activity? = null) {
     val deviceModel = remember { Constants.deviceModel }
-    var isRooted by remember { mutableStateOf(false) }
     var region by remember { mutableStateOf("") }
     val isModuleEnabled by remember { mutableStateOf(SharedPrefsUtil.isInitialized) }
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val categories = HookOptions.getHookOptions(context)
+    val isSupportedDevice = (deviceModel == "TB371FC" || deviceModel == "TB320FC")
     var expanded by remember { mutableStateOf(false) }
     var languageMenuExpanded by remember { mutableStateOf(false) }
     var selectedLanguage by remember { mutableStateOf(LanguageUtil.getLanguage()) }
 
     LaunchedEffect(Unit) {
-        scope.launch {
-            isRooted = Util.isDeviceRooted()
-            region = Constants.deviceRegion
+        region = Constants.deviceRegion
+    }
+
+    LaunchedEffect(categories, isSupportedDevice, isModuleEnabled) {
+        if (isModuleEnabled) {
+            SharedPrefsUtil.syncOptions(categories.flatMap { it.second }, isSupportedDevice)
         }
     }
 
@@ -201,16 +143,6 @@ fun AppContent(modifier: Modifier = Modifier, activity: Activity? = null) {
                                 val intent = Intent(context, SettingsViewActivity::class.java)
                                 context.startActivity(intent)
                             })
-
-                        if (isRooted || BuildConfig.DEBUG) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.reload)) },
-                                enabled = isRooted && isModuleEnabled,
-                                onClick = {
-                                    expanded = false
-                                    reloadSettings(context)
-                                })
-                        }
 
                         DropdownMenuItem(
                             text = { Text(stringResource(id = R.string.language)) },
@@ -309,21 +241,6 @@ fun AppContent(modifier: Modifier = Modifier, activity: Activity? = null) {
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 Text(
-                    text = stringResource(id = R.string.rooting_status),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = if (isRooted) stringResource(id = R.string.rooted) else stringResource(id = R.string.not_rooted),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isRooted) MaterialTheme.colorScheme.onSurface else Color.Red
-                )
-            }
-            Row(
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Text(
                     text = stringResource(id = R.string.module_status),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
@@ -336,8 +253,6 @@ fun AppContent(modifier: Modifier = Modifier, activity: Activity? = null) {
                 )
             }
         }
-
-        val isSupportedDevice = (deviceModel == "TB371FC" || deviceModel == "TB320FC")
 
         items(categories) { (category, options) ->
             CategorySection(category = category, options = options.map { it.copy(isEnabledOption = isSupportedDevice && it.isEnabledOption) }, context = context)
@@ -498,9 +413,6 @@ fun CategorySection(category: String, options: List<HookOption>, context: Contex
         )
         Spacer(modifier = Modifier.height(8.dp))
         options.forEach { option ->
-            if (SharedPrefsUtil.isInitialized && !option.isEnabledOption) {
-                SharedPrefsUtil.deleteOptionValue(option.key)
-            }
             OptionItem(context = context, option = option)
         }
     }
@@ -508,8 +420,12 @@ fun CategorySection(category: String, options: List<HookOption>, context: Contex
 
 @Composable
 fun OptionItem(context: Context, option: HookOption, modifier: Modifier = Modifier) {
-    var isChecked by remember { mutableStateOf(SharedPrefsUtil.isInitialized && SharedPrefsUtil.getOptionValue(option.key, option.defaultEnabled)) }
-    val isEnabled by remember { mutableStateOf(SharedPrefsUtil.isInitialized && option.isEnabledOption) }
+    var isChecked by remember(option.key, option.isEnabledOption) {
+        mutableStateOf(SharedPrefsUtil.isInitialized && SharedPrefsUtil.getOptionValue(option.key, option.defaultEnabled))
+    }
+    val isEnabled = remember(option.key, option.isEnabledOption) {
+        SharedPrefsUtil.isInitialized && option.isEnabledOption
+    }
 
     Column(
         modifier = modifier

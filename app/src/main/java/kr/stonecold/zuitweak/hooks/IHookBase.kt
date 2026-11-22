@@ -48,8 +48,6 @@ abstract class HookBase : IHookBase {
     override val hookTargetPackage: Array<String> = emptyArray()
     override val hookTargetPackageOptional: Array<String> = emptyArray()
 
-    private val methodExistenceMap: MutableMap<String, Boolean?> = mutableMapOf()
-
     open fun isEnabledCustomCheck(): Boolean {
         return true
     }

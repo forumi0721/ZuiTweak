@@ -1,16 +1,9 @@
 <resources>
     <string name="app_name">ZuiTweak</string>
     <string name="xposeddescription">An Xposed module that applies various tweaks to Lenovo Zui-based ROMs.</string>
-    <string name="xposedminversion">82</string>
+    <string name="xposedminversion">93</string>
     <string name="back_press_exit">뒤로 가기 버튼을 다시 누르면 종료됩니다.</string>
-    <string name="module_not_loaded">모듈이 로드되지 않았습니다.</string>
-    <string name="reboot_required_android">Android 패키지와 관련된 설정이 변경된 경우 재부팅이 필요합니다.</string>
-    <string name="no_changes_detected">변경 사항이 감지되지 않았습니다.</string>
-    <string name="no_running_processes">실행 중인 프로세스가 없습니다.</string>
-    <string name="failed_reload_settings">설정을 다시 로드하지 못했습니다.</string>
-    <string name="settings_reloaded">설정이 성공적으로 다시 로드되었습니다.</string>
     <string name="settings_view">설정 보기</string>
-    <string name="reload">다시 로드</string>
     <string name="language">Language</string>
     <string name="korean">Korean (KO)</string>
     <string name="english">Engligh (EN)</string>
@@ -21,9 +14,6 @@
     <string name="device_model">기기 모델:</string>
     <string name="unsupported_device">미지원 단말기</string>
     <string name="region">지역:</string>
-    <string name="rooting_status">루팅 상태:</string>
-    <string name="rooted">루팅됨</string>
-    <string name="not_rooted">루팅되지 않음</string>
     <string name="module_status">모듈 상태:</string>
     <string name="enabled">활성화됨</string>
     <string name="disabled">비활성화됨</string>
@@ -89,8 +79,6 @@
     <string name="hook_enable_turn_screen_on_desc">앱에서 화면을 켜기 허용을 활성화 합니다.</string>
     <string name="hook_enable_zui_camera_shutter_option_title">카메라 무음 설정 활성화</string>
     <string name="hook_enable_zui_camera_shutter_option_desc">카메라 앱내 설정에 무음 설정을 활성화 합니다.</string>
-    <string name="hook_fix_battery_icon_test_mode_title">배터리 아이콘 사라짐 수정</string>
-    <string name="hook_fix_battery_icon_test_mode_desc">test_mode 활성화 시 배터리 아이콘이 사라지는 문제를 해결합니다.</string>
     <string name="hook_fix_documents_ui_crash_title">DocumentsUI 강제 종료 수정</string>
     <string name="hook_fix_documents_ui_crash_desc">DocumentsUI에서 Mouse Drag시 발생하는 강제 종료 오류를 수정합니다.</string>
     <string name="hook_disable_keyboard_hotkey_menu_title">키보드 바로가기 키 단축키 제거</string>

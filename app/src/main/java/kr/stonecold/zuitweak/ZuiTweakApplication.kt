@@ -12,5 +12,8 @@ class ZuiTweakApplication : Application() {
     companion object {
         lateinit var appContext: Context
             private set
+
+        val isAppContextInitialized: Boolean
+            get() = ::appContext.isInitialized
     }
 }

@@ -35,14 +35,18 @@ class SettingsViewActivity : ComponentActivity() {
 
     private fun getAllSettings(): String {
         val stringBuilder = StringBuilder()
-        SharedPrefsUtil.init()
+        SharedPrefsUtil.init(this)
 
         if (!SharedPrefsUtil.isInitialized) {
             stringBuilder.append("SharedPrefsUtil has not been initialized")
         } else {
-            val allEntries = SharedPrefsUtil.getAllOptions()
-            for ((key, value) in allEntries) {
-                stringBuilder.append("Key: $key, Value: $value\n")
+            val allEntries = SharedPrefsUtil.getAllOptions().toSortedMap()
+            if (allEntries.isEmpty()) {
+                stringBuilder.append("No settings stored.")
+            } else {
+                for ((key, value) in allEntries) {
+                    stringBuilder.append("Key: $key, Value: $value\n")
+                }
             }
         }
         return stringBuilder.toString()
@@ -52,6 +56,12 @@ class SettingsViewActivity : ComponentActivity() {
     fun CacheSettingsScreen() {
         var settingsText by remember { mutableStateOf("Settings will be displayed here.") }
         val coroutineScope = rememberCoroutineScope()
+
+        LaunchedEffect(Unit) {
+            settingsText = withContext(Dispatchers.IO) {
+                getAllSettings()
+            }
+        }
 
         Column(
             modifier = Modifier

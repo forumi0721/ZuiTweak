@@ -3,7 +3,6 @@ package kr.stonecold.zuitweak
 import de.robv.android.xposed.IXposedHookInitPackageResources
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
-import de.robv.android.xposed.SELinuxHelper
 import de.robv.android.xposed.callbacks.XC_InitPackageResources
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 import kr.stonecold.zuitweak.common.*
@@ -74,6 +73,8 @@ class XposedInit : IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookIni
 
         XposedUtil.xposedInfo(tag, "HandleLoadPackage Loaded App: ${lpparam.packageName}")
 
+        XposedPrefsUtil.reload()
+
         filterHooks.forEach { hook ->
             val localTag = "${hook.javaClass.simpleName}[${lpparam.packageName}]"
             try {
@@ -103,11 +104,11 @@ class XposedInit : IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookIni
             return
         }
 
-        XposedPrefsUtil.reload()
-
         if (resparam == null) {
             return
         }
+
+        XposedPrefsUtil.reload()
 
         handleInitPackageResourcesCustom(resparam)
 

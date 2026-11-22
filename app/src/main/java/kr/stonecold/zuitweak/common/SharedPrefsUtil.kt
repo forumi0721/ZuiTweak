@@ -1,117 +1,88 @@
 package kr.stonecold.zuitweak.common
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import java.io.File
+import androidx.core.content.edit
+import kr.stonecold.zuitweak.HookOption
 
 @Suppress("unused")
 object SharedPrefsUtil {
+    private const val TAG = "SharedPrefsUtil"
     private lateinit var sharedPreferences: SharedPreferences
 
     var isInitialized: Boolean = false
         private set
 
-    fun init() {
+    @SuppressLint("WorldReadableFiles")
+    fun init(context: Context) {
+        if (isInitialized && ::sharedPreferences.isInitialized) {
+            return
+        }
+
         try {
+            val targetContext = context.applicationContext ?: context
             @Suppress("DEPRECATION")
-            setupPrefs()
+            sharedPreferences = targetContext.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_WORLD_READABLE)
             isInitialized = true
+        } catch (e: SecurityException) {
+            Log.d(TAG, "Module disabled or xposedsharedprefs inactive: ${e.message}")
+            isInitialized = false
         } catch (e: Exception) {
-            Log.d("SharedPrefsUtil", "Module disabled due to an exception: ${e.message}")
+            Log.d(TAG, "Module disabled due to an exception: ${e.message}")
             isInitialized = false
         }
     }
 
-    private fun setupPrefs() {
-        val appPrefsDir = "${Constants.BASE_DIR}/prefs"
-
-        val cmd = arrayOf("su", "-c", """
-            mkdir -p ${Constants.PREF_PATH} && \
-            chown root:root ${Constants.BASE_DIR} && chmod 777 ${Constants.BASE_DIR} && chcon u:object_r:magisk_file:s0 ${Constants.BASE_DIR} && \
-            chown root:root $appPrefsDir && chmod 777 $appPrefsDir && chcon u:object_r:magisk_file:s0 $appPrefsDir && \
-            chown root:root ${Constants.PREF_PATH} && chmod 777 ${Constants.PREF_PATH} && chcon u:object_r:magisk_file:s0 ${Constants.PREF_PATH}
-        """.trimIndent())
-
-        try {
-            val process = Runtime.getRuntime().exec(cmd)
-            val exitCode = process.waitFor()
-            if (exitCode == 0) {
-                println("Setup completed successfully.")
-            } else {
-                println("Setup failed with exit code $exitCode")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun createFile(name: String) {
-        val fullPath = "${Constants.PREF_PATH}/$name"
-        val appPrefsDir = "${Constants.BASE_DIR}/prefs"
-
-        val cmd = arrayOf("su", "-c", """
-            mkdir -p ${Constants.PREF_PATH} && \
-            chown root:root ${Constants.BASE_DIR} && chmod 777 ${Constants.BASE_DIR} && chcon u:object_r:magisk_file:s0 ${Constants.BASE_DIR} && \
-            chown root:root $appPrefsDir && chmod 777 $appPrefsDir && chcon u:object_r:magisk_file:s0 $appPrefsDir && \
-            chown root:root ${Constants.PREF_PATH} && chmod 777 ${Constants.PREF_PATH} && chcon u:object_r:magisk_file:s0 ${Constants.PREF_PATH}
-            touch $fullPath
-            chown root:root $fullPath && chmod 777 $fullPath && chcon u:object_r:magisk_file:s0 $fullPath
-        """.trimIndent())
-
-        try {
-            val process = Runtime.getRuntime().exec(cmd)
-            val exitCode = process.waitFor()
-            if (exitCode == 0) {
-                println("Setup completed successfully.")
-            } else {
-                println("Setup failed with exit code $exitCode")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun deleteFile(name: String) {
-        val fullPath = "${Constants.PREF_PATH}/$name"
-
-        val cmd = arrayOf("su", "-c", """
-            rm -rf $fullPath
-        """.trimIndent())
-
-        try {
-            val process = Runtime.getRuntime().exec(cmd)
-            val exitCode = process.waitFor()
-            if (exitCode == 0) {
-                println("Setup completed successfully.")
-            } else {
-                println("Setup failed with exit code $exitCode")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    fun getOptionValue(key: String, defaultValue: Boolean): Boolean {
+    fun syncOptions(options: List<HookOption>, isSupportedDevice: Boolean) {
         if (!isInitialized) {
-            throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
+            return
         }
-        return if (File("${Constants.PREF_PATH}/$key").exists()) {
-            true
-        } else {
-            defaultValue
+
+        sharedPreferences.edit(commit = true) {
+            for (option in options) {
+                if (!isSupportedDevice || !option.isEnabledOption) {
+                    if (sharedPreferences.contains(option.key)) {
+                        remove(option.key)
+                    }
+                } else if (!sharedPreferences.contains(option.key)) {
+                    putBoolean(option.key, option.defaultEnabled)
+                }
+            }
         }
     }
 
-    fun setOptionValue(key: String, value: Boolean) {
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getOptionValue(key: String, defaultValue: T): T {
         if (!isInitialized) {
             throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
         }
 
-        if (!File("${Constants.PREF_PATH}/$key").exists() && value) {
-            createFile(key)
-        } else if (File("${Constants.PREF_PATH}/$key").exists() && !value) {
-            deleteFile(key)
+        return when (defaultValue) {
+            is Boolean -> sharedPreferences.getBoolean(key, defaultValue) as T
+            is Int -> sharedPreferences.getInt(key, defaultValue) as T
+            is Float -> sharedPreferences.getFloat(key, defaultValue) as T
+            is Long -> sharedPreferences.getLong(key, defaultValue) as T
+            is String -> (sharedPreferences.getString(key, defaultValue) ?: defaultValue) as T
+            else -> throw IllegalArgumentException("Unsupported type.")
+        }
+    }
+
+    fun <T> setOptionValue(key: String, value: T) {
+        if (!isInitialized) {
+            throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
+        }
+
+        sharedPreferences.edit(commit = true) {
+            when (value) {
+                is Boolean -> putBoolean(key, value)
+                is Int -> putInt(key, value)
+                is Float -> putFloat(key, value)
+                is Long -> putLong(key, value)
+                is String -> putString(key, value)
+                else -> throw IllegalArgumentException("Unsupported type.")
+            }
         }
     }
 
@@ -120,8 +91,10 @@ object SharedPrefsUtil {
             throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
         }
 
-        if (File("${Constants.PREF_PATH}/$key").exists()) {
-            deleteFile(key)
+        if (sharedPreferences.contains(key)) {
+            sharedPreferences.edit(commit = true) {
+                remove(key)
+            }
         }
     }
 
@@ -130,15 +103,7 @@ object SharedPrefsUtil {
             throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
         }
 
-        val dir = File(Constants.PREF_PATH)
-        if (!dir.isDirectory) {
-            return emptyMap<String, Any?>()
-        }
-
-        val files = dir.listFiles()
-        return files?.associate { file ->
-            file.name to true
-        } ?: emptyMap<String, Any?>()
+        return sharedPreferences.all
     }
 
     fun clearAllOptions() {
@@ -146,20 +111,8 @@ object SharedPrefsUtil {
             throw UninitializedPropertyAccessException("SharedPrefsUtil has not been initialized. Call init(context) first.")
         }
 
-        val cmd = arrayOf("su", "-c", """
-            rm -rf ${Constants.PREF_PATH}/*
-        """.trimIndent())
-
-        try {
-            val process = Runtime.getRuntime().exec(cmd)
-            val exitCode = process.waitFor()
-            if (exitCode == 0) {
-                println("Setup completed successfully.")
-            } else {
-                println("Setup failed with exit code $exitCode")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        sharedPreferences.edit(commit = true) {
+            clear()
         }
     }
 }

@@ -23,14 +23,13 @@ object LanguageUtil {
     }
 
     fun getString(id: Int): String {
-        var result: String
-        try {
-            val context = ZuiTweakApplication.appContext
-            result = context.getString(id)
-        } catch (e: Exception) {
-            result = id.toString()
+        if (!ZuiTweakApplication.isAppContextInitialized) {
+            return ""
         }
-
-        return result
+        return try {
+            ZuiTweakApplication.appContext.getString(id)
+        } catch (e: Exception) {
+            id.toString()
+        }
     }
 }
