@@ -22,6 +22,7 @@ obj/
 .env
 .env.*
 /build.sh
+/download.sh
 *.jks
 *.keystore
 *.hprof
